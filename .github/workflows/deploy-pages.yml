@@ -59,8 +59,10 @@ jobs:
           touch site/.nojekyll
           sed -i 's#https://ali-moradi-portfolio.onrender.com#https://alimoradii.github.io/marketing-webapp-automation#g' site/index.html
 
-      - name: Configure Pages
+      - name: Configure and enable Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

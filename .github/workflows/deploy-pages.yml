@@ -1,0 +1,72 @@
+name: Deploy Classika Holding to GitHub Pages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 2 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare public mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          origin='https://ali-moradi-portfolio.onrender.com'
+          mkdir -p site/assets/screens site/files
+
+          fetch() {
+            local path="$1"
+            curl --fail --location --retry 4 --retry-delay 3 \
+              "$origin/$path" --output "site/$path"
+          }
+
+          fetch index.html
+          fetch style.css
+          fetch typography.css
+          fetch app.js
+          fetch assets/IRANSans-Regular.woff
+          fetch assets/IRANSans-Bold.woff
+          fetch assets/screens/marketing.png
+          fetch assets/screens/seo.jpg
+          fetch assets/screens/license.jpg
+          fetch assets/screens/divar-bale.jpg
+          fetch assets/screens/sarkhati.jpg
+          fetch assets/screens/forex-research.png
+          fetch assets/screens/saponine.webp
+          fetch files/Classika-Holding-Product-Catalog.pdf
+          fetch files/catalog-preview.png
+
+          touch site/.nojekyll
+          sed -i 's#https://ali-moradi-portfolio.onrender.com#https://alimoradii.github.io/marketing-webapp-automation#g' site/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
